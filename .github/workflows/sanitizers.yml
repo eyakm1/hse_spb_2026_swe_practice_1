@@ -16,7 +16,8 @@ jobs:
             cc: gcc
             cxx: g++
 
-    runs-on: ${{ matrix.os }}-${{ matrix.cc }}
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }}-${{ matrix.cc }}-sanitizer
 
     steps:
       - uses: actions/checkout@v4
