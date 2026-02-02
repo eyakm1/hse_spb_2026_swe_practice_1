@@ -1,0 +1,21 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  static-analysis:
+    uses: ./.github/workflows/static-analysis.yml
+
+  build-and-test:
+    needs: static-analysis
+    uses: ./.github/workflows/build-and-test.yml
+
+  sanitizers:
+    needs: build-and-test
+    uses: ./.github/workflows/sanitizers.yml
+
+  valgrind:
+    needs: build-and-test
+    uses: ./.github/workflows/valgrind.yml

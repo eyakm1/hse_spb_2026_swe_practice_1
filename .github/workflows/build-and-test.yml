@@ -1,0 +1,83 @@
+name: Build + test (multi toolchain)
+
+on:
+  workflow_call:
+
+jobs:
+  build_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+            mode: Debug
+          - os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+            mode: Release
+          - os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+            mode: Debug
+          - os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+            mode: Release
+          - os: macos-latest
+            cc: clang
+            cxx: clang++
+            mode: Debug
+          - os: macos-latest
+            cc: clang
+            cxx: clang++
+            mode: Release
+          - os: windows-latest
+            cc: msvc
+            cxx: msvc
+            mode: Debug
+          - os: windows-latest
+            cc: msvc
+            cxx: msvc
+            mode: Release
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.mode }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC dev env
+        if: ${{ matrix.cc == 'msvc' }}
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Ninja (Unix)
+        if: ${{ runner.os != 'Windows' }}
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then sudo apt-get update && sudo apt-get install -y ninja-build; fi
+          if [ "${{ runner.os }}" = "macOS" ]; then brew install ninja; fi
+
+      - name: Install Ninja (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        run: choco install ninja -y
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cmake -S . -B build -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.mode }} \
+              -DBUILD_TESTING=ON
+          else
+            CC=${{ matrix.cc }} CXX=${{ matrix.cxx }} \
+            cmake -S . -B build -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.mode }} \
+              -DBUILD_TESTING=ON
+          fi
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test (ctest)
+        run: ctest --test-dir build --output-on-failure
