@@ -1,0 +1,38 @@
+name: Static Analysis
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            cmake \
+            clang \
+            clang-tidy \
+            cppcheck
+
+      - name: Configure
+        run: |
+          cmake -S . -B build/static-analysis \
+            -DBUILD_TESTING=ON \
+
+      - name: Run cppcheck
+        shell: bash
+        run: |
+          cppcheck \
+            --project=build/static-analysis/compile_commands.json \
+            --enable=warning,style,performance,portability \
+            --inline-suppr \
+            --error-exitcode=1 \
+            --suppress=missingIncludeSystem \
+            --suppress="*:build/static-analysis/_deps/*" \
+            --quiet
