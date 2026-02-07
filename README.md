@@ -1,6 +1,6 @@
 # CLI
 
-![CI status](https://github.com/eyakm1/hse_spb_2026_swe_practice_1/actions/workflows/CI.yml/badge.svg?branch=prod)
+![CI status](https://github.com/eyakm1/hse_spb_2026_swe_practice_1/actions/workflows/CI.yml/badge.svg?branch=master)
 
 ## Обзор
 
