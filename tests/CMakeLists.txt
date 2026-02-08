@@ -9,7 +9,12 @@ FetchContent_MakeAvailable(doctest)
 
 add_executable(cli_tests
         doctest_main.cpp
-        test_foo.cpp
+        test_parser.cpp
+        test_environment.cpp
+        test_command_registry.cpp
+        test_executor.cpp
+        test_commands.cpp
+        test_command_line_interpreter.cpp
 )
 
 target_link_libraries(cli_tests
