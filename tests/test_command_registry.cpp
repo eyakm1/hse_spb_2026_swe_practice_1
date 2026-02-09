@@ -32,7 +32,7 @@ TEST_CASE("CommandRegistry register and find") {
     CommandRegistry reg;
     reg.register_command("dummy", std::make_unique<DummyCommand>());
     CHECK(reg.has("dummy") == true);
-    Command* cmd = reg.find("dummy");
+    Command const* cmd = reg.find("dummy");  // cppcheck-suppress unreadVariable
     REQUIRE(cmd != nullptr);
 }
 

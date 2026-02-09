@@ -11,8 +11,7 @@ ExecutorResult Executor::execute(const CommandNode& node,
                                  const Environment& env) {
     std::vector<std::string> args;
     args.push_back(node.name);
-    for (const auto& a : node.args)
-        args.push_back(a);
+    std::copy(node.args.begin(), node.args.end(), std::back_inserter(args));
 
     Command* cmd = registry_.find(node.name);
     if (cmd) {

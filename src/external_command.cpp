@@ -2,6 +2,7 @@
 #include "cli/environment.hpp"
 #include <algorithm>
 #include <array>
+#include <list>
 #include <cstring>
 #include <sstream>
 #include <thread>
@@ -190,7 +191,7 @@ int ExternalCommand::execute(const std::vector<std::string>& args,
 #else
     std::string program_path = resolve_executable(env, args[0]);
 
-    std::vector<std::vector<char>> arg_storage;
+    std::list<std::vector<char>> arg_storage;
     std::vector<char*> argv_ptrs;
     arg_storage.push_back(str_to_vec(program_path));
     argv_ptrs.push_back(arg_storage.back().data());

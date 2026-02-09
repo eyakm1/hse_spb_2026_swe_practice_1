@@ -10,6 +10,7 @@
 #include <windows.h>
 #else
 #include <cstdlib>
+extern char** environ;
 #endif
 
 namespace cli {
@@ -35,8 +36,7 @@ void Environment::init_from_current() {
     }
     FreeEnvironmentStringsA(env);
 #else
-    extern char** environ;
-    for (char** p = environ; p && *p; ++p) {
+    for (char** p = ::environ; p && *p; ++p) {
         std::string line(*p);
         std::size_t eq = line.find('=');
         if (eq != std::string::npos) {

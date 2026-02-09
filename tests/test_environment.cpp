@@ -45,7 +45,7 @@ TEST_CASE("Environment to_env_vector format") {
     Environment env;
     env.set("A", "1");
     env.set("B", "2");
-    auto vec = env.to_env_vector();
+    auto vec = env.to_env_vector();  // cppcheck-suppress unreadVariable
     REQUIRE(vec.size() == 2);
     // Order not specified (unordered_map)
     CHECK(std::find(vec.begin(), vec.end(), "A=1") != vec.end());
@@ -62,7 +62,7 @@ TEST_CASE("Environment init_from_current yields non-empty or empty") {
     Environment env;
     env.init_from_current();
     // At least PATH or similar often exists; if not, vector can be empty
-    auto vec = env.to_env_vector();
+    auto vec = env.to_env_vector();  // cppcheck-suppress unreadVariable
     // Just ensure it doesn't crash and get/set still work after
     env.set("CLI_TEST", "1");
     CHECK(env.get("CLI_TEST") == "1");
