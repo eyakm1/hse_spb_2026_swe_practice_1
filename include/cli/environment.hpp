@@ -7,49 +7,93 @@
 namespace cli {
 
 /**
- * Stores and provides environment variables.
- * Used to pass environment to external processes.
+ * Store and provide environment variables for the shell.
+ *
+ * Holds a key-value map of variable names to values. Used for variable
+ * substitution in command lines and for building the environment block
+ * passed to external processes.
  */
 class Environment {
 public:
-    Environment();
+  Environment();
 
-    /**
-     * Initializes from current process environment (e.g. getenv on each platform).
-     */
-    void init_from_current();
+  /**
+   * Initialize environment from the current process environment.
+   *
+   * Copies all environment variables from the running process (e.g. via
+   * platform-specific APIs such as `getenv` iteration on POSIX or
+   * `GetEnvironmentStrings` on Windows).
+   *
+   * @exceptsafe May throw on allocation or platform API failure.
+   */
+  void init_from_current();
 
-    /**
-     * Gets value of variable name, or empty string if not set.
-     */
-    std::string get(const std::string& name) const;
+  /**
+   * Get the value of a variable by name.
+   *
+   * @param[in] name Variable name (case-sensitive).
+   *
+   * @returns The value of the variable, or an empty string if not set.
+   *
+   * @exceptsafe Shall not throw exceptions.
+   */
+  std::string get(const std::string &name) const;
 
-    /**
-     * Expands $VAR and ${VAR} in s using current environment.
-     * $$ becomes literal $. Single $ at end or invalid name left as-is (no expansion).
-     * Used for double-quoted and unquoted segments; not used for single-quoted.
-     */
-    std::string substitute(const std::string& s) const;
+  /**
+   * Expand variable references in a string using the current environment.
+   *
+   * Replaces `$VAR` and `${VAR}` with the corresponding value. `$$` becomes
+   * a literal `$`. A lone `$` at end of string or an invalid name is left
+   * unchanged. Used for double-quoted and unquoted segments; single-quoted
+   * segments do not call substitute.
+   *
+   * @param[in] s String that may contain `$VAR` or `${VAR}` patterns.
+   *
+   * @returns A new string with variable references expanded.
+   *
+   * @exceptsafe Shall not throw exceptions.
+   */
+  std::string substitute(const std::string &s) const;
 
-    /**
-     * Sets variable name to value (overwrites if exists).
-     */
-    void set(const std::string& name, const std::string& value);
+  /**
+   * Set a variable to a value.
+   *
+   * Overwrites the previous value if the variable already exists.
+   *
+   * @param[in] name Variable name.
+   * @param[in] value Value to assign.
+   *
+   * @exceptsafe May throw on allocation.
+   */
+  void set(const std::string &name, const std::string &value);
 
-    /**
-     * Unsets variable if present.
-     */
-    void unset(const std::string& name);
+  /**
+   * Remove a variable from the environment.
+   *
+   * Has no effect if the variable is not set.
+   *
+   * @param[in] name Variable name to unset.
+   *
+   * @exceptsafe Shall not throw exceptions.
+   */
+  void unset(const std::string &name);
 
-    /**
-     * Builds platform-specific environment block for external process.
-     * Windows: pointer to "key=val\0key2=val2\0\0" block.
-     * POSIX: vector of "key=val" strings for execve.
-     */
-    std::vector<std::string> to_env_vector() const;
+  /**
+   * Build a platform-specific environment block for an external process.
+   *
+   * On Windows, the result is a vector of "key=value" strings that can be
+   * converted to the null-terminated block format expected by CreateProcess.
+   * On POSIX, the vector is in the form expected by `execve` (e.g. "key=val").
+   *
+   * @returns Vector of "key=value" strings representing the current
+   * environment.
+   *
+   * @exceptsafe May throw on allocation.
+   */
+  std::vector<std::string> to_env_vector() const;
 
 private:
-    std::unordered_map<std::string, std::string> vars_;
+  std::unordered_map<std::string, std::string> vars_;
 };
 
-}  // namespace cli
+} // namespace cli
