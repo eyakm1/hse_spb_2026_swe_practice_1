@@ -25,6 +25,9 @@ target_link_libraries(cli_tests
 
 cli_apply_warnings(cli_tests)
 cli_apply_sanitizers(cli_tests)
+if(CLI_ENABLE_COVERAGE)
+    cli_apply_coverage(cli_tests)
+endif()
 
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(cli_tests)

@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(ProjectOptions)
 include(CompilerWarnings)
 include(Sanitizers)
+include(Coverage)
 
 option(CLI_ENABLE_MEMCHECK "Enable CTest memcheck (valgrind)" OFF)
 if(CLI_ENABLE_MEMCHECK)
@@ -30,4 +31,8 @@ add_subdirectory(app)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
+endif()
+
+if(CLI_ENABLE_COVERAGE AND BUILD_TESTING AND LCOV AND GENHTML)
+    cli_add_coverage_target()
 endif()
