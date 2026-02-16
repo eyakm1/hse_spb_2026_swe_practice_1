@@ -34,7 +34,7 @@ public:
    *
    * @exceptsafe Shall not throw exceptions.
    */
-  std::optional<Pipeline> parse(const std::string &line) const;
+  static std::optional<Pipeline> parse(const std::string &line);
 };
 
 } // namespace cli

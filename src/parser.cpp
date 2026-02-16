@@ -1,4 +1,5 @@
 #include "cli/parser.hpp"
+#include <algorithm>
 #include <cctype>
 #include <sstream>
 
@@ -168,16 +169,14 @@ void tokenize_segment(const std::string &segment,
 }
 
 bool segment_empty_or_whitespace(const std::string &s) {
-  for (char c : s) {
-    if (!is_space(static_cast<unsigned char>(c)))
-      return false;
-  }
-  return true;
+  return std::all_of(
+      s.begin(), s.end(),
+      [](char c) { return is_space(static_cast<unsigned char>(c)); });
 }
 
 } // namespace
 
-std::optional<Pipeline> Parser::parse(const std::string &line) const {
+std::optional<Pipeline> Parser::parse(const std::string &line) {
   std::vector<std::string> segments = split_by_pipe(line);
   Pipeline pipeline;
   pipeline.reserve(segments.size());
@@ -220,13 +219,11 @@ std::optional<Pipeline> Parser::parse(const std::string &line) const {
   if (pipeline.empty())
     return std::nullopt;
 
-  bool all_empty = true;
-  for (const auto &node : pipeline) {
-    if (!node.name.empty() || !node.args.empty()) {
-      all_empty = false;
-      break;
-    }
-  }
+  bool all_empty =
+      std::all_of(pipeline.begin(), pipeline.end(),
+                  [](const CommandNode &node) {
+                    return node.name.empty() && node.args.empty();
+                  });
   if (all_empty && pipeline.size() == 1)
     return std::nullopt;
 

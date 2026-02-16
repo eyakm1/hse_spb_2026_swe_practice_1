@@ -6,7 +6,7 @@ namespace cli {
 Executor::Executor(CommandRegistry &registry) : registry_(registry) {}
 
 void Executor::expand_node(const CommandNode &node, const Environment &env,
-                           std::vector<std::string> &args_out) const {
+                           std::vector<std::string> &args_out) {
   args_out.clear();
   std::string name = (node.substitute_name == Substitute::Yes)
                          ? env.substitute(node.name)

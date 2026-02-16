@@ -120,8 +120,8 @@ private:
    * @param[in] env Environment for variable expansion.
    * @param[out] args_out Output vector of expanded command name and arguments.
    */
-  void expand_node(const CommandNode &node, const Environment &env,
-                   std::vector<std::string> &args_out) const;
+  static void expand_node(const CommandNode &node, const Environment &env,
+                         std::vector<std::string> &args_out);
 
   /**
    * Run a single command with already-expanded arguments.

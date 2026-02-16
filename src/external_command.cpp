@@ -18,6 +18,8 @@
 #include <process.h>
 #include <windows.h>
 #else
+#include <cerrno>
+#include <csignal>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -284,11 +286,27 @@ int ExternalCommand::execute(const std::vector<std::string> &args,
   close(stderr_pipe[1]);
 
   std::thread writer([&in, stdin_pipe]() {
+    std::signal(SIGPIPE, SIG_IGN);
     std::array<char, 4096> buf;
-    while (in.read(buf.data(), buf.size()) || in.gcount() > 0) {
+    bool pipe_closed = false;
+    while (!pipe_closed &&
+           (in.read(buf.data(), buf.size()) || in.gcount() > 0)) {
       ssize_t n = in.gcount();
-      if (n > 0)
-        write(stdin_pipe[1], buf.data(), static_cast<size_t>(n));
+      if (n <= 0)
+        continue;
+      const char *p = buf.data();
+      while (n > 0) {
+        ssize_t w = write(stdin_pipe[1], p, static_cast<size_t>(n));
+        if (w == -1) {
+          if (errno == EINTR)
+            continue;
+          if (errno == EPIPE)
+            pipe_closed = true;
+          break;
+        }
+        p += w;
+        n -= w;
+      }
     }
     close(stdin_pipe[1]);
   });
