@@ -1,4 +1,5 @@
 #include "cli/executor.hpp"
+#include <sstream>
 
 namespace cli {
 
@@ -31,10 +32,9 @@ ExecutorResult Executor::execute_one(const std::vector<std::string>& args,
     const std::string& name = args[0];
     Command* cmd = registry_.find(name);
     if (cmd) {
-        const int exit_sentinel = -1;
         int code = cmd->execute(args, in, out, err, env);
-        if (code == exit_sentinel)
-            return ExecutorResult{true, 0};
+        if (code < 0)
+            return ExecutorResult{true, -1 - code};
         return ExecutorResult{false, code};
     }
     int code = external_.execute(args, in, out, err, env);

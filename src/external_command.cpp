@@ -43,6 +43,44 @@ std::string build_cmdline(const std::vector<std::string>& args) {
     }
     return s;
 }
+
+/** Resolves executable using PATH on Windows; returns full path or original name. */
+std::string resolve_executable_win32(const Environment& env, const std::string& name) {
+    if (name.find('/') != std::string::npos || name.find('\\') != std::string::npos)
+        return name;
+    std::string path_var = env.get("PATH");
+    if (path_var.empty())
+        return name;
+    std::string dir;
+    for (char c : path_var) {
+        if (c == ';' || c == ':') {
+            if (!dir.empty()) {
+                std::string candidate = dir + "\\" + name;
+                DWORD att = GetFileAttributesA(candidate.c_str());
+                if (att != INVALID_FILE_ATTRIBUTES && !(att & FILE_ATTRIBUTE_DIRECTORY))
+                    return candidate;
+                candidate = dir + "\\" + name + ".exe";
+                att = GetFileAttributesA(candidate.c_str());
+                if (att != INVALID_FILE_ATTRIBUTES && !(att & FILE_ATTRIBUTE_DIRECTORY))
+                    return candidate;
+            }
+            dir.clear();
+        } else {
+            dir += c;
+        }
+    }
+    if (!dir.empty()) {
+        std::string candidate = dir + "\\" + name;
+        DWORD att = GetFileAttributesA(candidate.c_str());
+        if (att != INVALID_FILE_ATTRIBUTES && !(att & FILE_ATTRIBUTE_DIRECTORY))
+            return candidate;
+        candidate = dir + "\\" + name + ".exe";
+        att = GetFileAttributesA(candidate.c_str());
+        if (att != INVALID_FILE_ATTRIBUTES && !(att & FILE_ATTRIBUTE_DIRECTORY))
+            return candidate;
+    }
+    return name;
+}
 #else
 #include <sys/stat.h>
 
@@ -95,8 +133,12 @@ int ExternalCommand::execute(const std::vector<std::string>& args,
         return 127;
 
 #ifdef _WIN32
-    std::string cmdline = build_cmdline(args);
-    std::string prog = args[0];
+    std::string program_path = resolve_executable_win32(env, args[0]);
+    std::vector<std::string> full_args;
+    full_args.push_back(program_path);
+    for (std::size_t i = 1; i < args.size(); ++i)
+        full_args.push_back(args[i]);
+    std::string cmdline = build_cmdline(full_args);
 
     HANDLE hStdinR = nullptr, hStdinW = nullptr;
     HANDLE hStdoutR = nullptr, hStdoutW = nullptr;
@@ -134,7 +176,7 @@ int ExternalCommand::execute(const std::vector<std::string>& args,
     cmdline_buf.push_back('\0');
 
     BOOL ok = CreateProcessA(
-        nullptr,
+        program_path.c_str(),
         cmdline_buf.data(),
         nullptr,
         nullptr,

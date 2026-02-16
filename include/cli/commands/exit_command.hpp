@@ -5,8 +5,8 @@
 namespace cli {
 
 /**
- * Built-in command: exit — request interpreter to exit.
- * Returns -1 as special code so Executor sets should_exit.
+ * Built-in command: exit [n] — request interpreter to exit with code n (0–255).
+ * Returns -(n+1) so Executor sets should_exit and exit_code.
  */
 class ExitCommand : public Command {
 public:

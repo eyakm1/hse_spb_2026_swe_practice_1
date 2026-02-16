@@ -40,12 +40,29 @@ TEST_CASE("EchoCommand only command name") {
     CHECK(out.str() == "\n");
 }
 
-TEST_CASE("ExitCommand returns -1") {
+TEST_CASE("ExitCommand returns -1 for exit with no arg") {
     ExitCommand cmd;
     Environment env;
     std::stringstream in, out, err;
     int code = cmd.execute({"exit"}, in, out, err, env);
     CHECK(code == -1);
+}
+
+TEST_CASE("ExitCommand returns -(n+1) for exit n") {
+    ExitCommand cmd;
+    Environment env;
+    std::stringstream in, out, err;
+    int code = cmd.execute({"exit", "5"}, in, out, err, env);
+    CHECK(code == -6);
+}
+
+TEST_CASE("ExitCommand invalid argument prints error and returns -256") {
+    ExitCommand cmd;
+    Environment env;
+    std::stringstream in, out, err;
+    int code = cmd.execute({"exit", "x"}, in, out, err, env);
+    CHECK(code == -256);
+    CHECK(err.str().find("numeric argument required") != std::string::npos);
 }
 
 TEST_CASE("CatCommand missing file operand") {

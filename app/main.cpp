@@ -2,6 +2,5 @@
 
 int main() {
     cli::CommandLineInterpreter interpreter;
-    interpreter.run(std::cin, std::cout, std::cerr);
-    return 0;
+    return interpreter.run(std::cin, std::cout, std::cerr);
 }

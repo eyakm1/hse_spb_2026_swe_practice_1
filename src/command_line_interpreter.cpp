@@ -84,8 +84,9 @@ void CommandLineInterpreter::register_builtins() {
     registry_.register_command("exit", std::make_unique<ExitCommand>());
 }
 
-void CommandLineInterpreter::run(std::istream& in, std::ostream& out, std::ostream& err) {
+int CommandLineInterpreter::run(std::istream& in, std::ostream& out, std::ostream& err) {
     std::string line;
+    int exit_code = 0;
     while (true) {
         try {
             if (&in == &std::cin) {
@@ -102,14 +103,17 @@ void CommandLineInterpreter::run(std::istream& in, std::ostream& out, std::ostre
                 continue;
             }
             ExecutorResult result = executor_.execute(*pipeline, in, out, err, env_);
-            if (result.should_exit)
+            if (result.should_exit) {
+                exit_code = result.exit_code;
                 break;
+            }
         } catch (const std::exception& e) {
             err << "cli: " << e.what() << "\n";
         } catch (...) {
             err << "cli: unknown error\n";
         }
     }
+    return exit_code;
 }
 
 }  // namespace cli

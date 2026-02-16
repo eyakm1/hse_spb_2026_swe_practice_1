@@ -21,10 +21,11 @@ public:
     CommandLineInterpreter();
 
     /**
-     * Runs the read-execute-print loop until the user runs "exit".
+     * Runs the read-execute-print loop until the user runs "exit" or EOF.
      * Uses in for input, out for normal output, err for errors.
+     * @return Exit code when stopped by "exit" command, or 0 on EOF.
      */
-    void run(std::istream& in = std::cin, std::ostream& out = std::cout, std::ostream& err = std::cerr);
+    int run(std::istream& in = std::cin, std::ostream& out = std::cout, std::ostream& err = std::cerr);
 
 private:
     void register_builtins();
