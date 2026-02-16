@@ -19,3 +19,6 @@ target_include_directories(cli
 
 cli_apply_warnings(cli)
 cli_apply_sanitizers(cli)
+if(CLI_ENABLE_COVERAGE)
+    cli_apply_coverage(cli)
+endif()

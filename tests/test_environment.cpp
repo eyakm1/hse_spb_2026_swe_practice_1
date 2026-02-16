@@ -67,3 +67,72 @@ TEST_CASE("Environment init_from_current yields non-empty or empty") {
     env.set("CLI_TEST", "1");
     CHECK(env.get("CLI_TEST") == "1");
 }
+
+TEST_CASE("Environment substitute expands $VAR") {
+    Environment env;
+    env.set("FOO", "bar");
+    CHECK(env.substitute("prefix_${FOO}_suffix") == "prefix_bar_suffix");
+    CHECK(env.substitute("$FOO") == "bar");
+    CHECK(env.substitute("") == "");
+}
+
+TEST_CASE("Environment substitute unset variable becomes empty") {
+    Environment env;
+    CHECK(env.substitute("a$MISSING b") == "a b");
+}
+
+TEST_CASE("Environment substitute $$ is literal dollar") {
+    Environment env;
+    env.set("X", "y");
+    CHECK(env.substitute("$$X") == "$X");
+    CHECK(env.substitute("$$") == "$");
+}
+
+TEST_CASE("Environment substitute ${VAR} form") {
+    Environment env;
+    env.set("VAR", "value");
+    CHECK(env.substitute("${VAR}") == "value");
+    CHECK(env.substitute("${VAR}x") == "valuex");
+}
+
+TEST_CASE("Environment substitute no expansion in invalid $") {
+    Environment env;
+    CHECK(env.substitute("$") == "$");
+    CHECK(env.substitute("a$") == "a$");
+}
+
+TEST_CASE("Environment substitute ${} empty name yields empty") {
+    Environment env;
+    env.set("X", "never");
+    CHECK(env.substitute("a${}b") == "ab");
+}
+
+TEST_CASE("Environment substitute unclosed ${ leaves rest as-is") {
+    Environment env;
+    env.set("VAR", "v");
+    CHECK(env.substitute("${VAR") == "${VAR");
+}
+
+TEST_CASE("Environment substitute multiple variables") {
+    Environment env;
+    env.set("A", "1");
+    env.set("B", "2");
+    CHECK(env.substitute("$A$B") == "12");
+    CHECK(env.substitute("${A}x${B}") == "1x2");
+}
+
+TEST_CASE("Environment substitute variable name with digits") {
+    Environment env;
+    env.set("VAR1", "one");
+    env.set("V1", "digit");
+    CHECK(env.substitute("$VAR1") == "one");
+    CHECK(env.substitute("$V1") == "digit");
+}
+
+TEST_CASE("Environment substitute dollar followed by non-var char leaves dollar") {
+    Environment env;
+    env.set("X", "y");
+    CHECK(env.substitute("$.x") == "$.x");
+    CHECK(env.substitute("$-") == "$-");
+    CHECK(env.substitute("$ ") == "$ ");
+}

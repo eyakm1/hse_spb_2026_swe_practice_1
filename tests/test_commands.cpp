@@ -82,13 +82,14 @@ TEST_CASE("CatCommand reads and outputs file") {
     CHECK(out.str() == "line1\nline2\n");
 }
 
-TEST_CASE("WcCommand missing file operand") {
+TEST_CASE("WcCommand with no args reads from stdin") {
     WcCommand cmd;
     Environment env;
-    std::stringstream in, out, err;
+    std::stringstream in("hello world\n"), out, err;
     int code = cmd.execute({"wc"}, in, out, err, env);
-    CHECK(code == 1);
-    CHECK(err.str().find("missing file operand") != std::string::npos);
+    CHECK(code == 0);
+    CHECK(out.str().find(" 1 ") != std::string::npos);  // 1 line
+    CHECK(out.str().find(" 2 ") != std::string::npos);  // 2 words
 }
 
 TEST_CASE("WcCommand cannot open file") {

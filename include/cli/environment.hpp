@@ -25,6 +25,13 @@ public:
     std::string get(const std::string& name) const;
 
     /**
+     * Expands $VAR and ${VAR} in s using current environment.
+     * $$ becomes literal $. Single $ at end or invalid name left as-is (no expansion).
+     * Used for double-quoted and unquoted segments; not used for single-quoted.
+     */
+    std::string substitute(const std::string& s) const;
+
+    /**
      * Sets variable name to value (overwrites if exists).
      */
     void set(const std::string& name, const std::string& value);

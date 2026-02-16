@@ -38,21 +38,28 @@ public:
     explicit Executor(CommandRegistry& registry);
 
     /**
-     * Executes the given command node.
-     * @param node Parsed command (name + args).
-     * @param in Standard input.
-     * @param out Standard output.
-     * @param err Standard error.
-     * @param env Environment for the process.
-     * @return should_exit true when exit command was run, exit_code for status.
+     * Executes a pipeline (one or more commands). Applies variable substitution,
+     * then runs single command or chains via streams. Exit code is the last command's;
+     * if any command requests exit (built-in exit), returns should_exit.
      */
-    ExecutorResult execute(const CommandNode& node,
+    ExecutorResult execute(const Pipeline& pipeline,
                            std::istream& in,
                            std::ostream& out,
                            std::ostream& err,
                            const Environment& env);
 
 private:
+    /** Expands node name/args using env according to substitute flags; fills args_out. */
+    void expand_node(const CommandNode& node, const Environment& env,
+                     std::vector<std::string>& args_out) const;
+
+    /** Runs one command (already expanded args); used by execute(Pipeline). */
+    ExecutorResult execute_one(const std::vector<std::string>& args,
+                               std::istream& in,
+                               std::ostream& out,
+                               std::ostream& err,
+                               const Environment& env);
+
     CommandRegistry& registry_;
     ExternalCommand external_;
 };

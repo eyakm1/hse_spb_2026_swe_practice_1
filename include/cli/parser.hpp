@@ -7,17 +7,19 @@
 namespace cli {
 
 /**
- * Parses a single input line into a CommandNode.
- * - Single quote: weak quoting — backslash escapes (\', \\, \n, \t, \r).
- * - Double quote: full quoting — no escapes, every character literal.
+ * Parses a single input line into a pipeline (one or more commands separated by |).
+ * - Single quote: weak quoting — backslash escapes (\', \\, \n, \t, \r); no variable substitution.
+ * - Double quote: full quoting — no escapes, literal; variable substitution applies.
+ * - Unquoted: variable substitution applies.
+ * - Pipe | separates commands; literal inside quotes.
  */
 class Parser {
 public:
     /**
-     * Parses line into command name and arguments.
+     * Parses line into a pipeline of command nodes.
      * Returns nullopt if line is empty or only whitespace.
      */
-    std::optional<CommandNode> parse(const std::string& line) const;
+    std::optional<Pipeline> parse(const std::string& line) const;
 };
 
 }  // namespace cli

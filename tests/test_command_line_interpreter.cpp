@@ -61,3 +61,95 @@ TEST_CASE("CommandLineInterpreter quoted echo") {
     cli.run(in, out, err);
     CHECK(out.str().find("hello world") != std::string::npos);
 }
+
+TEST_CASE("CommandLineInterpreter variable substitution") {
+    CommandLineInterpreter cli;
+    std::stringstream in("X=foo\necho $X\n exit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("foo") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter pipe") {
+    CommandLineInterpreter cli;
+    std::stringstream in("echo a b c | wc\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("1") != std::string::npos);
+    CHECK(out.str().find("3") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter assignment then command") {
+    CommandLineInterpreter cli;
+    std::stringstream in("A=1 B=2 echo $A $B\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("1") != std::string::npos);
+    CHECK(out.str().find("2") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter single-quoted no substitution") {
+    CommandLineInterpreter cli;
+    std::stringstream in("V=expanded\necho '$V'\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("$V") != std::string::npos);
+    CHECK(out.str().find("expanded") == std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter only assignments no command continues") {
+    CommandLineInterpreter cli;
+    std::stringstream in("A=1 B=2\necho $A$B\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("12") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter assignment with empty value") {
+    CommandLineInterpreter cli;
+    std::stringstream in("X=\necho a${X}b\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("ab") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter leading pipe drops empty and runs rest") {
+    CommandLineInterpreter cli;
+    std::stringstream in("| echo ok\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("ok") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter empty command in middle of pipeline reports error") {
+    CommandLineInterpreter cli;
+    std::stringstream in("echo a | | wc\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(err.str().find("empty command") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter substitution in assignment value") {
+    CommandLineInterpreter cli;
+    std::stringstream in("B=world\nA=hello_$B\necho $A\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().find("hello_world") != std::string::npos);
+}
+
+TEST_CASE("CommandLineInterpreter pipe then exit in pipeline stops REPL") {
+    CommandLineInterpreter cli;
+    std::stringstream in("echo hi | exit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(out.str().empty());
+}
+
+TEST_CASE("CommandLineInterpreter three-way pipe") {
+    CommandLineInterpreter cli;
+    std::stringstream in("echo one two three | wc | wc\nexit\n");
+    std::stringstream out, err;
+    cli.run(in, out, err);
+    CHECK(err.str().empty());
+    CHECK(out.str().find("1") != std::string::npos);
+}
