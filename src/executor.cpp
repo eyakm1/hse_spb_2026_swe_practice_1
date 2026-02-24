@@ -76,6 +76,10 @@ ExecutorResult Executor::execute(const Pipeline &pipeline, std::istream &in,
 
   for (std::size_t i = 0; i < expanded.size(); ++i) {
     const bool is_last = (i == expanded.size() - 1);
+    if (i >= 1) {
+      current_in->seekg(0);
+      current_in->clear();
+    }
     std::ostream *current_out = is_last ? &out : &pipe_write;
     ExecutorResult result =
         execute_one(expanded[i], *current_in, *current_out, err, env);
@@ -84,7 +88,9 @@ ExecutorResult Executor::execute(const Pipeline &pipeline, std::istream &in,
     last_code = result.exit_code;
     if (!is_last) {
       pipe_write.seekg(0);
-      pipe_read.str(pipe_write.str());
+      std::string pipe_data = pipe_write.str();
+      pipe_read.str(pipe_data);
+      pipe_read.seekg(0);
       pipe_read.clear();
       pipe_write.str("");
       pipe_write.clear();

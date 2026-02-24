@@ -65,13 +65,13 @@ TEST_CASE("ExitCommand invalid argument prints error and returns -256") {
   CHECK(err.str().find("numeric argument required") != std::string::npos);
 }
 
-TEST_CASE("CatCommand missing file operand") {
+TEST_CASE("CatCommand with no args reads from stdin") {
   CatCommand cmd;
   Environment env;
-  std::stringstream in, out, err;
+  std::stringstream in("hello from stdin\n"), out, err;
   int code = cmd.execute({"cat"}, in, out, err, env);
-  CHECK(code == 1);
-  CHECK(err.str().find("missing file operand") != std::string::npos);
+  CHECK(code == 0);
+  CHECK(out.str() == "hello from stdin\n");
 }
 
 TEST_CASE("CatCommand cannot open file") {
