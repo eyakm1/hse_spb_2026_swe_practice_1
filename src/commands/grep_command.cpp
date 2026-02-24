@@ -2,6 +2,7 @@
 #include <CLI/CLI.hpp>
 #include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -122,8 +123,9 @@ int GrepCommand::execute(const std::vector<std::string> &args,
   std::vector<std::string> argv_str(args.begin(), args.end());
   std::vector<char *> argv_ptrs;
   argv_ptrs.reserve(argv_str.size());
-  for (std::string &s : argv_str)
-    argv_ptrs.push_back(&s[0]);
+  std::transform(argv_str.begin(), argv_str.end(),
+                 std::back_inserter(argv_ptrs),
+                 [](std::string &s) { return &s[0]; });
 
   try {
     app.parse(static_cast<int>(argv_ptrs.size()), argv_ptrs.data());

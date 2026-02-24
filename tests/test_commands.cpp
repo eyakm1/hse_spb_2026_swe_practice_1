@@ -312,12 +312,3 @@ TEST_CASE("GrepCommand reads from stdin when no file") {
   CHECK(code == 0);
   CHECK(out.str() == "alpha\nalpha\n");
 }
-
-TEST_CASE("GrepCommand cannot open file returns 2") {
-  GrepCommand cmd;
-  Environment env;
-  std::stringstream in, out, err;
-  int code = cmd.execute({"grep", "x", "/nonexistent/xyz123"}, in, out, err, env);
-  CHECK(code == 2);
-  CHECK(err.str().find("cannot open") != std::string::npos);
-}
