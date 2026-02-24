@@ -59,6 +59,8 @@ TEST_CASE("Executor unknown command runs external and returns non-zero when "
 
   CHECK(result.should_exit == false);
   CHECK(result.exit_code == 127);
+  CHECK(err.str().find("command not found") != std::string::npos);
+  CHECK(err.str().find("nonexistent_command_xyz_12345") != std::string::npos);
 }
 
 TEST_CASE("Executor passes args to built-in") {

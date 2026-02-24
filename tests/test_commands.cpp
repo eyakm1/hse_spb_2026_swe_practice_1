@@ -1,6 +1,7 @@
 #include "cli/commands/cat_command.hpp"
 #include "cli/commands/echo_command.hpp"
 #include "cli/commands/exit_command.hpp"
+#include "cli/commands/grep_command.hpp"
 #include "cli/commands/pwd_command.hpp"
 #include "cli/commands/wc_command.hpp"
 #include "cli/environment.hpp"
@@ -9,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace cli;
 
@@ -151,4 +153,171 @@ TEST_CASE("PwdCommand returns 0 and prints something") {
   bool has_sep = out.str().find('/') != std::string::npos ||
                  out.str().find('\\') != std::string::npos;
   CHECK(has_sep);
+}
+
+// --- GrepCommand tests ---
+
+TEST_CASE("GrepCommand missing pattern returns 2") {
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep"}, in, out, err, env);
+  CHECK(code == 2);
+  CHECK(err.str().find("missing pattern") != std::string::npos);
+}
+
+TEST_CASE("GrepCommand invalid regex returns 2") {
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "["}, in, out, err, env);
+  CHECK(code == 2);
+  CHECK(err.str().find("invalid regular expression") != std::string::npos);
+}
+
+TEST_CASE("GrepCommand basic regex match in file") {
+  std::string path = "cli_test_grep_fixture.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "Minimal syntax grep\nline two\nMinimal again\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "Minimal", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  CHECK(out.str().find("Minimal") != std::string::npos);
+}
+
+TEST_CASE("GrepCommand regex anchor start") {
+  std::string path = "cli_test_grep_anchor.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "Minimal syntax grep\nline two\nMinimal again\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "^Minimal", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  CHECK(out.str() == "Minimal syntax grep\nMinimal again\n");
+}
+
+TEST_CASE("GrepCommand -i case insensitive") {
+  std::string path = "cli_test_grep_i.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "Minimal syntax grep\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "-i", "minimal", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  CHECK(out.str().find("Minimal") != std::string::npos);
+}
+
+TEST_CASE("GrepCommand -w whole word no partial match") {
+  std::string path = "cli_test_grep_w.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "Minimal syntax\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "-w", "Minima", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 1);
+  CHECK(out.str().empty());
+}
+
+TEST_CASE("GrepCommand -w whole word match") {
+  std::string path = "cli_test_grep_w2.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "foo bar baz\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "-w", "bar", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  CHECK(out.str() == "foo bar baz\n");
+}
+
+TEST_CASE("GrepCommand -A after context") {
+  std::string path = "cli_test_grep_A.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "line0\nII\nline2\nline3\nII\nline5\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "-A", "1", "II", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  CHECK(out.str() == "II\nline2\nII\nline5\n");
+}
+
+TEST_CASE("GrepCommand -A overlapping context merged") {
+  std::string path = "cli_test_grep_A_overlap.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "a\nX\nb\nX\nc\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "-A", "1", "X", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 0);
+  // Overlapping: match at line 1 (a\nX\nb) and line 3 (b\nX\nc). Merged: 1,2,3,4
+  CHECK(out.str() == "X\nb\nX\nc\n");
+}
+
+TEST_CASE("GrepCommand no match returns 1") {
+  std::string path = "cli_test_grep_nomatch.txt";
+  {
+    std::ofstream f(path);
+    REQUIRE(f);
+    f << "hello\nworld\n";
+  }
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "xyz", path}, in, out, err, env);
+  std::remove(path.c_str());
+  CHECK(code == 1);
+  CHECK(out.str().empty());
+}
+
+TEST_CASE("GrepCommand reads from stdin when no file") {
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in("alpha\nbeta\nalpha\n"), out, err;
+  int code = cmd.execute({"grep", "alpha"}, in, out, err, env);
+  CHECK(code == 0);
+  CHECK(out.str() == "alpha\nalpha\n");
+}
+
+TEST_CASE("GrepCommand cannot open file returns 2") {
+  GrepCommand cmd;
+  Environment env;
+  std::stringstream in, out, err;
+  int code = cmd.execute({"grep", "x", "/nonexistent/xyz123"}, in, out, err, env);
+  CHECK(code == 2);
+  CHECK(err.str().find("cannot open") != std::string::npos);
 }

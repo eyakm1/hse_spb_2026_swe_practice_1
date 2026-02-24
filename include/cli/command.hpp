@@ -16,6 +16,7 @@ namespace cli {
  *
  * @see CatCommand
  * @see EchoCommand
+ * @see GrepCommand
  * @see PwdCommand
  * @see WcCommand
  * @see ExitCommand
