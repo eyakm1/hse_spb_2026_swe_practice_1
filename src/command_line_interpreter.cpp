@@ -5,6 +5,7 @@
 #include "cli/commands/exit_command.hpp"
 #include "cli/commands/pwd_command.hpp"
 #include "cli/commands/wc_command.hpp"
+#include "cli/commands/grep_command.hpp"
 #include <cctype>
 
 namespace cli {
@@ -90,6 +91,7 @@ void CommandLineInterpreter::register_builtins() {
   registry_.register_command("wc", std::make_unique<WcCommand>());
   registry_.register_command("pwd", std::make_unique<PwdCommand>());
   registry_.register_command("exit", std::make_unique<ExitCommand>());
+  registry_.register_command("grep", std::make_unique<GrepCommand>());
 }
 
 int CommandLineInterpreter::run(std::istream &in, std::ostream &out,

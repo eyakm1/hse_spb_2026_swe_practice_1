@@ -4,6 +4,8 @@
 
 ![architecture](architecture.png)
 
+Исходник диаграммы: [architecture.puml](architecture.puml)
+
 ## Обзор компонентов
 
 - `CommandLineInterpreter`: главный цикл – ждёт команды пользователя, запускает разбор строки, подстановку, выполнение.

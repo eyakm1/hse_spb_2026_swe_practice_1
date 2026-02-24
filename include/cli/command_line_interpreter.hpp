@@ -13,7 +13,7 @@ namespace cli {
  * Main REPL: read a line, parse it, execute the pipeline, repeat until exit.
  *
  * Combines a Parser, Environment, CommandRegistry, and Executor to implement
- * a read-eval-print loop. Built-in commands (cat, echo, pwd, wc, exit) are
+ * a read-eval-print loop. Built-in commands (cat, echo, pwd, wc, grep, exit) are
  * registered at construction; unknown names are executed as external programs.
  *
  * @see Parser
@@ -25,7 +25,7 @@ public:
   /**
    * Construct an interpreter with default built-ins and current environment.
    *
-   * Registers the built-in commands (cat, echo, pwd, wc, exit) and
+   * Registers the built-in commands (cat, echo, pwd, wc, grep, exit) and
    * initializes the environment from the current process (e.g. getenv).
    *
    * @exceptsafe May throw on allocation or during register_builtins.
@@ -54,7 +54,7 @@ public:
           std::ostream &err = std::cerr);
 
 private:
-  /// Register built-in commands (cat, echo, pwd, wc, exit) in the registry.
+  /// Register built-in commands (cat, echo, pwd, wc, grep, exit) in the registry.
   void register_builtins();
 
   Parser parser_;

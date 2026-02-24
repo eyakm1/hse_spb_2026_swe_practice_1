@@ -195,8 +195,10 @@ int ExternalCommand::execute(const std::vector<std::string> &args,
 
   if (!ok) {
     DWORD e = GetLastError();
-    if (e == 2) // file not found
+    if (e == 2) { // file not found
+      err << "cli: " << args[0] << ": command not found\n";
       return 127;
+    }
     err << "CreateProcess failed: " << e << "\n";
     CloseHandle(hStdinW);
     CloseHandle(hStdoutR);
@@ -325,8 +327,12 @@ int ExternalCommand::execute(const std::vector<std::string> &args,
   int status = 0;
   if (waitpid(pid, &status, 0) == -1)
     return 1;
-  if (WIFEXITED(status))
-    return WEXITSTATUS(status);
+  if (WIFEXITED(status)) {
+    int code = WEXITSTATUS(status);
+    if (code == 127)
+      err << "cli: " << args[0] << ": command not found\n";
+    return code;
+  }
   return 1;
 #endif
 }

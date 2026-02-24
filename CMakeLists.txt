@@ -25,6 +25,13 @@ if(CLI_ENABLE_MEMCHECK)
 endif()
 
 include(CTest)
+include(FetchContent)
+
+FetchContent_Declare(CLI11
+    GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+    GIT_TAG v2.4.1
+)
+FetchContent_MakeAvailable(CLI11)
 
 add_subdirectory(src)
 add_subdirectory(app)
