@@ -39,3 +39,8 @@
 
 # debug information files
 *.dwo
+
+# Build and cache directories
+build/
+build_coverage/
+.cache/
