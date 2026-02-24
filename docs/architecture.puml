@@ -1,0 +1,90 @@
+@startuml
+
+' ---------- ПАКЕТЫ ----------------------
+package "Core" {
+    class CommandLineInterpreter {
+        +run(in, out, err) : int
+        parser_ : Parser
+        executor_ : Executor
+        env_ : Environment
+        registry_ : CommandRegistry
+    }
+}
+package "Parsing" {
+    class Parser {
+        +{static} parse(line) : optional<Pipeline>
+    }
+    class Pipeline << (V,#FFAAAA) >>
+    class CommandNode {
+        +name : string
+        +args : vector<string>
+        +substitute_name : Substitute
+        +substitute_arg : vector<Substitute>
+    }
+}
+package "Execution" {
+    class Executor {
+        +execute(pipeline, in, out, err, env) : ExecutorResult
+        -execute_one(args, in, out, err, env) : ExecutorResult
+        -expand_node(node, env, args_out)
+        registry_ : CommandRegistry
+        external_ : ExternalCommand
+    }
+    class ExecutorResult {
+        +should_exit : bool
+        +exit_code : int
+    }
+    interface Command {
+        +execute(args, in, out, err, env) : int
+    }
+    class CatCommand
+    class EchoCommand
+    class WcCommand
+    class PwdCommand
+    class ExitCommand
+    class ExternalCommand
+    class GrepCommand
+}
+package "Environment" {
+    class Environment {
+        +get(name) : string
+        +set(name, value)
+        +substitute(s) : string
+        +unset(name)
+        +init_from_current()
+        +to_env_vector() : vector<string>
+    }
+}
+package "Registry" {
+    class CommandRegistry {
+        +register_command(name, cmd)
+        +find(name) : Command*
+        +has(name) : bool
+    }
+}
+
+' ---------- КОМПОЗИЦИИ ------------------
+CommandLineInterpreter *-- Parser
+CommandLineInterpreter *-- Executor
+CommandLineInterpreter *-- Environment
+CommandLineInterpreter *-- CommandRegistry
+
+' ---------- АССОЦИАЦИИ ------------------
+Executor --> Command : через registry / ExternalCommand
+Executor *-- ExternalCommand
+Executor ..> ExecutorResult : возвращает
+Parser ..> Pipeline : возвращает
+Pipeline *-- CommandNode : vector
+
+CommandRegistry --> Command : хранит
+
+' ---------- НАСЛЕДОВАНИЕ/РЕАЛИЗАЦИИ -----
+CatCommand ..|> Command
+EchoCommand ..|> Command
+WcCommand ..|> Command
+PwdCommand ..|> Command
+ExitCommand ..|> Command
+ExternalCommand ..|> Command
+GrepCommand ..|> Command
+
+@enduml
